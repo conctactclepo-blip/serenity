@@ -164,7 +164,7 @@ const MOODS=[['😴','Dormir','Doux, sans paroles','linear-gradient(135deg,#1d2b
 ['❤️','En amoureux','Tendre et romantique','linear-gradient(135deg,#8b1e3f,#ff6b8b)',[{fuzzytags:'romantic'},{fuzzytags:'love'},{tags:'romantic'}]]];
 let tab='find', tag='Calme', query='', mood='', vid=LS.get('vid',false), items=[], offset=0, loading=false, curVar=null;
 let favs=LS.get('favs',{}), lib=LS.get('lib',{}), PLS=LS.get('pls',{}), artist=null, openPl=null, sharedId=null;
-const audio=new Audio(); audio.preload='none'; audio.crossOrigin='anonymous'; let cur=null;
+let audio=new Audio(); audio.preload='none'; let cur=null, fixTried=0;
 function toast(t){ const e=$('#toast'); e.textContent=t; e.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>e.classList.remove('on'),2200); }
 const mmss=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
 const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -202,13 +202,13 @@ async function search(reset,autoplay){
   if(!KEY){ render(); return; }
   if(loading) return; loading=true; if(reset){ offset=0; items=[]; curVar=null; $('#list').innerHTML='<div class="empty"><div class="big">〰</div>Je cherche…</div>'; }
   const base={client_id:KEY,format:'json',limit:30,include:'musicinfo licenses',audioformat:'mp32',audiodlformat:QUAL,order:'popularity_month',imagesize:200};
-  if(vid){ base.ccnc=0; base.ccnd=0; }
+  if(vid&&!sharedId){ base.ccnc=0; base.ccnd=0; }
   const list=curVar?[curVar]:variants(); let got=null;
   try{
-    for(const v of list){ const p=new URLSearchParams({...base,...v,offset}); const r=await fetch(API+'?'+p); const j=await r.json();
+    outer: for(const v0 of list) for(let k=0;k<3;k++){ const v=(sharedId&&k)?{...v0,order:k==1?'releasedate':'id'}:v0; const p=new URLSearchParams({...base,...v,offset}); const r=await fetch(API+'?'+p); const j=await r.json();
       if(j.headers&&j.headers.status!=='success'){ $('#list').innerHTML=`<div class="empty"><div class="big">🔑</div>${j.headers.code===5?'La clé Jamendo n\'est pas bonne. Vérifie-la dans ⚙.':'Jamendo ne répond pas pour l\'instant : '+esc(j.headers.error_message)}</div>`; loading=false; return; }
-      let res=(j.results||[]).map(pick); if(vid) res=res.filter(t=>vidOK(t.lic));
-      if(res.length||curVar){ got=res; curVar=v; break; } }
+      let res=(j.results||[]).map(pick); if(vid&&!sharedId) res=res.filter(t=>vidOK(t.lic));
+      if(res.length||curVar){ got=res; curVar=v; break outer; } if(!sharedId&&k>=1) break; await new Promise(z=>setTimeout(z,400)); }
     got=got||[]; const seen=new Set(items.map(x=>x.id)); got=got.filter(t=>!seen.has(t.id));
     items=items.concat(got); offset+=30; render(got.length>0);
     if(autoplay&&items[0]){ play(items[0]); toast(sharedId?'🎧 Morceau partagé':'▶ Playlist '+mood); }
@@ -241,7 +241,7 @@ $('#list').addEventListener('click',e=>{ const b=e.target.closest('[data-a]'); i
 const BANDS=[[60,'Basses'],[230,'Bas-méd.'],[910,'Médium'],[3600,'Aigus'],[12000,'Brillance']];
 const PRESETS=[['🎵','Normal',[0,0,0,0,0]],['🎧','Casque',[3,1,0,1,2]],['🔊','Haut-parleur du téléphone',[-4,2,3,2,1]],['💥','Basses +',[7,3,0,0,1]],['🗣️','Voix claires',[-2,-1,3,4,2]],['🌙','Nuit (doux)',[1,0,-1,-3,-5]],['🚗','Voiture',[4,1,0,2,3]],['🔈','Enceinte Bluetooth',[2,0,1,2,2]],['✨','Cristal',[0,-1,0,3,5]]];
 let EQ=LS.get('eq',{p:'Normal',g:[0,0,0,0,0],wide:false,comp:false}); let AC=null, F=[], WN=null, CMP=null;
-function chain(){ if(AC) return; try{ AC=new (window.AudioContext||window.webkitAudioContext)(); const src=AC.createMediaElementSource(audio);
+function chain(){ if(AC) return; try{ if(audio.crossOrigin!=='anonymous'){ const s=audio.src, t=audio.currentTime, pl=!audio.paused; audio.crossOrigin='anonymous'; if(s){ audio.src=s; audio.currentTime=t||0; if(pl) audio.play().catch(()=>{}); } } AC=new (window.AudioContext||window.webkitAudioContext)(); const src=AC.createMediaElementSource(audio);
   F=BANDS.map(([f],i)=>{ const n=AC.createBiquadFilter(); n.type=i==0?'lowshelf':i==4?'highshelf':'peaking'; n.frequency.value=f; n.Q.value=1; return n; });
   CMP=AC.createDynamicsCompressor(); CMP.threshold.value=-24; CMP.ratio.value=3.5; CMP.knee.value=20;
   // son spatial : élargit la stéréo (mid/side)
@@ -275,14 +275,24 @@ $('#pTm').onclick=()=>{ const i=(TMS.indexOf(TM)+1)%TMS.length; TM=TMS[i]; clear
   else toast('Minuteur arrêté'); tmUI(); };
 // ---- lecteur ----
 function play(t){ if(cur&&cur.id===t.id){ audio.paused?audio.play():audio.pause(); return; }
-  cur=t; audio.src=(t.audio||'').replace(/format=mp3[12]/,'format='+SQ); offSrc(t); if(EQ.p!=='Normal'||EQ.wide||EQ.comp||AC) chain(); if(AC&&AC.state!=='running') AC.resume(); audio.play().catch(()=>{}); $('#player').classList.add('on'); $('#pC').style.backgroundImage=`url('${t.img}')`; $('#pT').textContent=t.name; $('#pA').textContent=t.artist; $('#pDl').style.display=t.ok?'':'none'; credit(t); history.replaceState(null,'',location.pathname+'?t='+t.id);
+  fixTried=0; cur=t; audio.src=(t.audio||'').replace(/format=mp3[12]/,'format='+SQ); offSrc(t); if(EQ.p!=='Normal'||EQ.wide||EQ.comp||AC) chain(); if(AC&&AC.state!=='running') AC.resume(); audio.play().catch(()=>{}); $('#player').classList.add('on'); $('#pC').style.backgroundImage=`url('${t.img}')`; $('#pT').textContent=t.name; $('#pA').textContent=t.artist; $('#pDl').style.display=t.ok?'':'none'; credit(t); history.replaceState(null,'',location.pathname+'?t='+t.id);
   if('mediaSession' in navigator){ navigator.mediaSession.metadata=new MediaMetadata({title:t.name,artist:t.artist,album:'Serenity',artwork:t.img?[{src:t.img,sizes:'200x200'}]:[]}); navigator.mediaSession.setActionHandler('nexttrack',()=>step(1)); navigator.mediaSession.setActionHandler('previoustrack',()=>step(-1)); }
   render(true); }
 function list(){ return tab==='find'?items:tab==='fav'?Object.values(favs).reverse():tab==='pls'?(openPl&&PLS[openPl]||[]):Object.values(lib).reverse(); }
 function step(d){ const L=list(), i=L.findIndex(x=>cur&&x.id===cur.id); const n=L[i+d]; if(n) play(n); }
+function bindAudio(){
 audio.onended=()=>step(1);
 audio.onplay=audio.onpause=()=>{ $('#pp').textContent=audio.paused?'▶':'❚❚'; document.querySelectorAll('.row').forEach(r=>{ const b=r.querySelector('[data-a="play"]'); r.classList.toggle('play',cur&&r.dataset.id==cur.id); b.textContent=cur&&r.dataset.id==cur.id&&!audio.paused?'❚❚':'▶'; }); };
 audio.ontimeupdate=()=>{ $('#bar i').style.width=(audio.duration?audio.currentTime/audio.duration*100:0)+'%'; };
+audio.onerror=()=>rescue();
+}
+bindAudio();
+// si un morceau refuse de se lire : 1) on enlève les réglages du son pour ce lecteur  2) on redemande un lien frais à Jamendo
+async function rescue(){ if(!cur) return; const t=cur, src=audio.src;
+  if(fixTried>=2){ toast('Ce morceau ne se lit pas pour l\'instant, on passe au suivant'); fixTried=0; step(1); return; } fixTried++;
+  if(audio.crossOrigin==='anonymous'){ try{ audio.pause(); }catch(e){} audio=new Audio(); audio.preload='auto'; bindAudio(); AC=null; audio.src=src; audio.play().catch(()=>{}); toast('Réglages du son désactivés pour ce morceau'); return; }
+  try{ const j=await (await fetch(API+'?'+new URLSearchParams({client_id:KEY,format:'json',id:t.id,audioformat:SQ}))).json(); const u=j.results&&j.results[0]&&j.results[0].audio; if(u&&cur&&cur.id===t.id){ audio.src=u; audio.play().catch(()=>{}); return; } }catch(e){}
+  rescue(); }
 $('#pp').onclick=()=>audio.paused?audio.play():audio.pause();
 $('#pDl').onclick=()=>cur&&addQ(cur);
 $('#bar').addEventListener('pointerdown',e=>{ const r=e.currentTarget.getBoundingClientRect(); if(audio.duration) audio.currentTime=(e.clientX-r.left)/r.width*audio.duration; });
