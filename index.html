@@ -23,6 +23,7 @@
 <style>
 :root{--bg:#070b14;--ink:#eef3ff;--mut:#8a97b4;--acc:#7fd8c6;--acc2:#9a8cff;--card:rgba(255,255,255,.055);--line:rgba(255,255,255,.1)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}input,.info,#credit span{-webkit-user-select:text;user-select:text}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.35 -apple-system,"Segoe UI",Roboto,system-ui,sans-serif;overflow:hidden}
 body:before{content:"";position:fixed;inset:-20%;background:radial-gradient(40% 35% at 20% 15%,rgba(127,216,198,.22),transparent 70%),radial-gradient(45% 40% at 85% 30%,rgba(154,140,255,.2),transparent 70%),radial-gradient(50% 40% at 50% 100%,rgba(70,120,255,.15),transparent 70%);filter:blur(10px);animation:drift 26s ease-in-out infinite alternate;z-index:-1}
 @keyframes drift{to{transform:translate(4%,-3%) rotate(6deg)}}
