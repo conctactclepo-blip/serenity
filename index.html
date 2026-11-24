@@ -47,7 +47,7 @@ main{flex:1;overflow-y:auto;padding:4px 14px 170px}
 .cov{width:54px;height:54px;border-radius:12px;flex:none;background:#1a2338 center/cover;position:relative;overflow:hidden}
 .cov button{position:absolute;inset:0;background:rgba(0,0,0,.25);display:grid;place-items:center;font-size:18px;opacity:.95}
 .meta{flex:1;min-width:0}.meta b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.meta span{display:block;font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta .ar{text-decoration:underline dotted;text-underline-offset:3px}.meta span{display:block;font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .act{display:flex;gap:6px}.act .ic{width:38px;height:38px;font-size:15px}
 .ic.ok{background:rgba(127,216,198,.18);border-color:rgba(127,216,198,.5)}
 .ic.fav{color:#ff9ab8}
@@ -84,6 +84,13 @@ main{flex:1;overflow-y:auto;padding:4px 14px 170px}
 .eqb{display:flex;justify-content:space-between;gap:6px;padding:6px 4px}.eqb label{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--mut)}
 .eqb input{writing-mode:vertical-lr;direction:rtl;height:120px;width:28px;accent-color:#7fd8c6}
 .eqt{display:flex;gap:8px;margin-top:10px}.eqt button{flex:1;padding:12px 6px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:13px}.eqt button.on{border-color:var(--acc);background:rgba(127,216,198,.18)}
+.pa{display:flex;gap:6px;margin-top:10px}.pa button{flex:1;height:34px;border-radius:12px;background:var(--card);border:1px solid var(--line);font-size:12px;white-space:nowrap}
+#pTm.on{background:rgba(154,140,255,.25);border-color:#9a8cff;font-weight:700}
+#ctx{margin:0 20px 6px;display:none;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:rgba(154,140,255,.14);border:1px solid rgba(154,140,255,.4);font-size:14px}#ctx.on{display:flex}#ctx b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#ctx button{font-size:13px;color:var(--mut)}
+.plr{display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;background:var(--card);border:1px solid var(--line);margin:8px 6px}.plr .n{flex:1;font-weight:600}.plr span{color:var(--mut);font-size:12.5px}
+#plL button{display:block;width:100%;text-align:left;padding:13px 14px;border-radius:12px;background:var(--card);border:1px solid var(--line);margin:6px 0}
+.off{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:6px;margin-left:6px;background:rgba(127,216,198,.15);color:#7fd8c6;border:1px solid rgba(127,216,198,.4)}
+.info ul{padding-left:18px;margin:8px 0;color:#cdd6ec;font-size:13.5px;line-height:1.45}.info li{margin:6px 0}.info a{color:var(--acc)}
 #toast{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top));transform:translate(-50%,-150%);padding:10px 18px;border-radius:999px;background:rgba(18,26,44,.9);border:1px solid var(--line);font-size:13px;transition:transform .35s;z-index:30;white-space:nowrap}
 #toast.on{transform:translate(-50%,0)}
 </style>
@@ -94,11 +101,12 @@ main{flex:1;overflow-y:auto;padding:4px 14px 170px}
   <div class="search"><span>⌕</span><input id="qIn" placeholder="Artiste, titre, ambiance…" enterkeyhint="search" autocomplete="off"><button id="qX" style="display:none;color:var(--mut)">✕</button></div>
   <div class="moods" id="moods"></div>
   <div class="chips" id="chips"></div>
-  <div class="tabs"><button class="on" data-t="find">Découvrir</button><button data-t="fav">Favoris</button><button data-t="lib">Téléchargés</button></div>
+  <div class="tabs"><button class="on" data-t="find">Découvrir</button><button data-t="fav">Favoris</button><button data-t="pls">Listes</button><button data-t="lib">Hors ligne</button></div>
+  <div id="ctx"></div>
   <main id="list"></main>
 </div>
 <div id="q"><div class="sp"></div><div class="t" id="qT"></div><button id="qStop" style="color:var(--mut);font-size:12px">ARRÊTER</button></div>
-<div id="player"><div class="pl"><div class="cov" id="pC"></div><div class="meta"><b id="pT"></b><span id="pA"></span></div><button class="ic" id="pTm" aria-label="Minuteur">🌙</button><button class="ic" id="pDl">↓</button><button id="pp">❚❚</button></div><div id="credit"><span id="crT"></span><button id="crB">Copier le crédit</button></div><div id="bar"><i></i></div></div>
+<div id="player"><div class="pl"><div class="cov" id="pC"></div><div class="meta"><b id="pT"></b><span id="pA"></span></div><button class="ic" id="pDl">↓</button><button id="pp">❚❚</button></div><div class="pa"><button id="pAdd">＋ Liste</button><button id="pSh">↗ Partager</button><button id="pAr">🎤 Artiste</button><button id="pTm" aria-label="Minuteur">🌙</button></div><div id="credit"><span id="crT"></span><button id="crB">Copier le crédit</button></div><div id="bar"><i></i></div></div>
 <div class="sheet" id="sKey"><div>
   <h3>RÉGLAGES</h3>
   <p>Serenity cherche dans la bibliothèque libre de <b>Jamendo</b> : des centaines de milliers de morceaux que les artistes permettent de télécharger gratuitement.</p>
@@ -108,6 +116,7 @@ main{flex:1;overflow-y:auto;padding:4px 14px 170px}
   <p style="margin-top:16px">Pas de clé ? Crée un compte gratuit sur <b>devportal.jamendo.com</b>, puis « Create a new app » : ils te donnent un Client ID à coller ici.</p>
   <p>Qualité des téléchargements :</p>
   <div style="display:flex;gap:8px"><button class="btn g" data-qual="mp32" style="margin:0">MP3 haute qualité</button><button class="btn g" data-qual="mp31" style="margin:0">MP3 léger</button></div>
+  <button class="btn g" id="kInfo">ℹ️ CE QUE J'AI LE DROIT DE FAIRE · MENTIONS LÉGALES</button>
   <button class="btn g" id="kClose">FERMER</button>
 </div></div>
 <div class="sheet" id="sEq"><div>
@@ -121,6 +130,23 @@ main{flex:1;overflow-y:auto;padding:4px 14px 170px}
   <div style="display:flex;gap:8px"><button class="btn g" data-sq="mp32" style="margin:0">Haute qualité</button><button class="btn g" data-sq="mp31" style="margin:0">Économie de données</button></div>
   <button class="btn g" id="eqClose">FERMER</button>
 </div></div>
+<div class="sheet" id="sPl"><div><h3>AJOUTER À UNE LISTE</h3><p id="plFor"></p><div id="plL"></div>
+  <input id="plNew" placeholder="Nouvelle liste (ex : Mon sport)" maxlength="40"><button class="btn" id="plMk">CRÉER ET AJOUTER</button><button class="btn g" id="plClose">FERMER</button></div></div>
+<div class="sheet" id="sInfo"><div class="info">
+  <h3>ℹ️ CE QUE TU AS LE DROIT DE FAIRE</h3>
+  <p>Toutes les musiques de Serenity viennent de <b>Jamendo</b> : les artistes les partagent eux-mêmes sous licence <b>Creative Commons</b>.</p>
+  <ul><li>✅ <b>Écouter et télécharger pour toi</b> : gratuit et légal, pour tous les morceaux.</li>
+  <li>🎬 <b>Mettre une musique dans une vidéo</b> (réseaux, YouTube, projet perso ou pro) : seulement les morceaux avec le badge <i class="lb">🎬 vidéos OK</i>, et en <b>citant l'artiste</b> (bouton « Copier le crédit »).</li>
+  <li>🚫 <b>Les autres morceaux</b> : leur licence interdit l'usage commercial ou la modification. Mettre une musique sur une vidéo compte comme une modification.</li>
+  <li>🚫 <b>Revendre ou republier</b> les morceaux comme s'ils étaient à toi : interdit.</li></ul>
+  <p>Pour un usage commercial d'un morceau sans badge (pub, magasin, film…), Jamendo propose des licences payantes sur <a href="https://licensing.jamendo.com" target="_blank" rel="noopener">licensing.jamendo.com</a>.</p>
+  <h3 style="margin-top:22px">MENTIONS LÉGALES</h3>
+  <p><b>Éditeur</b> : Grégory Vautier EI, nom commercial Clépo<br>SIRET 904 863 545 00060 · Riom (63)<br>Contact : <a href="mailto:conctactclepo@gmail.com">conctactclepo@gmail.com</a><br><b>Directeur de la publication</b> : Grégory Vautier</p>
+  <p><b>Hébergeur</b> : GitHub, Inc., 88 Colin P Kelly Jr St, San Francisco, CA 94107, États-Unis</p>
+  <p><b>Musiques</b> : fournies par Jamendo S.A. (Luxembourg) via son service public. Chaque morceau reste la propriété de son artiste.</p>
+  <h3 style="margin-top:22px">CONFIDENTIALITÉ</h3>
+  <p>Serenity ne demande <b>aucun compte</b> et ne collecte <b>aucune donnée</b> : pas de cookies, pas de pub, pas de suivi. Tes favoris, tes listes et tes réglages restent <b>uniquement dans ton téléphone</b>. Pour chercher et lire la musique, ton téléphone contacte directement Jamendo, qui voit donc ton adresse internet comme n'importe quel site.</p>
+  <button class="btn g" id="infoClose">FERMER</button></div></div>
 <div id="toast"></div>
 <script>
 const $=s=>document.querySelector(s);
@@ -137,7 +163,7 @@ const MOODS=[['😴','Dormir','Doux, sans paroles','linear-gradient(135deg,#1d2b
 ['✈️','Voyage','Sur la route','linear-gradient(135deg,#1f5fa8,#4fc3f7)',[{tags:'travel'},{fuzzytags:'travel'},{fuzzytags:'world'}]],
 ['❤️','En amoureux','Tendre et romantique','linear-gradient(135deg,#8b1e3f,#ff6b8b)',[{fuzzytags:'romantic'},{fuzzytags:'love'},{tags:'romantic'}]]];
 let tab='find', tag='Calme', query='', mood='', vid=LS.get('vid',false), items=[], offset=0, loading=false, curVar=null;
-let favs=LS.get('favs',{}), lib=LS.get('lib',{});
+let favs=LS.get('favs',{}), lib=LS.get('lib',{}), PLS=LS.get('pls',{}), artist=null, openPl=null, sharedId=null;
 const audio=new Audio(); audio.preload='none'; audio.crossOrigin='anonymous'; let cur=null;
 function toast(t){ const e=$('#toast'); e.textContent=t; e.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>e.classList.remove('on'),2200); }
 const mmss=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
@@ -145,7 +171,7 @@ const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 const vidOK=u=>!!u&&!/-nc|-nd/.test(u);
 const licName=u=>{const m=(u||'').match(/licenses\/([a-z-]+)\/([\d.]+)/);return m?'CC '+m[1].toUpperCase()+' '+m[2]:'Creative Commons'};
 const dec=x=>{const d=document.createElement('textarea');d.innerHTML=x||'';return d.value};
-const pick=t=>({id:t.id,name:dec(t.name),artist:dec(t.artist_name),img:t.album_image||t.image||'',dur:t.duration,audio:t.audio,dl:t.audiodownload,ok:t.audiodownload_allowed!==false,lic:t.license_ccurl||'',url:t.shareurl||t.shorturl||''});
+const pick=t=>({aid:t.artist_id,id:t.id,name:dec(t.name),artist:dec(t.artist_name),img:t.album_image||t.image||'',dur:t.duration,audio:t.audio,dl:t.audiodownload,ok:t.audiodownload_allowed!==false,lic:t.license_ccurl||'',url:t.shareurl||t.shorturl||''});
 
 // ---- styles ----
 function ui(){ $('#chips').innerHTML=`<button class="chip vid${vid?' on':''}" data-vid="1">🎬 Pour vidéos</button>`+STYLES.map(s=>`<button class="chip${s[1]===tag&&!mood?' on':''}" data-tag="${s[1]}">${s[0]} ${s[1]}</button>`).join('');
@@ -153,19 +179,21 @@ function ui(){ $('#chips').innerHTML=`<button class="chip vid${vid?' on':''}" da
 ui();
 $('#chips').onclick=e=>{ const b=e.target.closest('.chip'); if(!b) return;
   if(b.dataset.vid){ vid=!vid; LS.set('vid',vid); ui(); toast(vid?'🎬 Seulement les morceaux utilisables dans tes vidéos':'Tous les morceaux'); setTab('find'); search(true); return; }
-  tag=b.dataset.tag===tag&&!mood?'':b.dataset.tag; mood=''; query=''; $('#qIn').value=''; $('#qX').style.display='none'; ui(); setTab('find'); search(true); };
-$('#moods').onclick=e=>{ const b=e.target.closest('.mood'); if(!b) return; mood=b.dataset.mood; tag=''; query=''; $('#qIn').value=''; ui(); setTab('find'); search(true,true); };
-$('#qIn').addEventListener('keydown',e=>{ if(e.key==='Enter'){ query=e.target.value.trim(); if(query){ tag=''; mood=''; ui(); } e.target.blur(); setTab('find'); search(true); } });
+  tag=b.dataset.tag===tag&&!mood?'':b.dataset.tag; mood=''; artist=null; ctx(); query=''; $('#qIn').value=''; $('#qX').style.display='none'; ui(); setTab('find'); search(true); };
+$('#moods').onclick=e=>{ const b=e.target.closest('.mood'); if(!b) return; mood=b.dataset.mood; tag=''; query=''; artist=null; ctx(); $('#qIn').value=''; ui(); setTab('find'); search(true,true); };
+$('#qIn').addEventListener('keydown',e=>{ if(e.key==='Enter'){ query=e.target.value.trim(); if(query){ tag=''; mood=''; artist=null; ctx(); ui(); } e.target.blur(); setTab('find'); search(true); } });
 $('#qIn').addEventListener('input',e=>$('#qX').style.display=e.target.value?'block':'none');
 $('#qX').onclick=()=>{ $('#qIn').value=''; $('#qX').style.display='none'; query=''; if(!tag&&!mood){ tag='Calme'; } ui(); search(true); };
 
 // ---- onglets ----
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.t));
-function setTab(t){ tab=t; document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t)); render(); }
-function counts(){ const f=Object.keys(favs).length, l=Object.keys(lib).length; document.querySelector('[data-t="fav"]').innerHTML='Favoris'+(f?`<b>${f}</b>`:''); document.querySelector('[data-t="lib"]').innerHTML='Téléchargés'+(l?`<b>${l}</b>`:''); }
+function setTab(t){ if(t!=='pls') openPl=null; tab=t; ctx(); document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t)); render(); }
+function counts(){ const f=Object.keys(favs).length, l=Object.keys(lib).length; document.querySelector('[data-t="fav"]').innerHTML='Favoris'+(f?`<b>${f}</b>`:''); document.querySelector('[data-t="lib"]').innerHTML='Hors ligne'+(OFF.size?`<b>${OFF.size}</b>`:''); const pn=Object.keys(PLS).length; document.querySelector('[data-t="pls"]').innerHTML='Listes'+(pn?`<b>${pn}</b>`:''); }
 
 // ---- recherche Jamendo ----
 function variants(){
+  if(sharedId) return [{id:sharedId}];
+  if(artist) return [{artist_id:artist.id,order:'popularity_total'}];
   if(query) return [{search:query,order:'popularity_total'},{namesearch:query,order:'popularity_total'}];
   if(mood) return MOODS.find(m=>m[1]===mood)[4];
   const st=STYLES.find(x=>x[1]===tag); if(!st) return [{}];
@@ -183,7 +211,7 @@ async function search(reset,autoplay){
       if(res.length||curVar){ got=res; curVar=v; break; } }
     got=got||[]; const seen=new Set(items.map(x=>x.id)); got=got.filter(t=>!seen.has(t.id));
     items=items.concat(got); offset+=30; render(got.length>0);
-    if(autoplay&&items[0]){ play(items[0]); toast('▶ Playlist '+mood); }
+    if(autoplay&&items[0]){ play(items[0]); toast(sharedId?'🎧 Morceau partagé':'▶ Playlist '+mood); }
   }catch(e){ $('#list').innerHTML='<div class="empty"><div class="big">📡</div>Pas de connexion. Réessaie quand tu as du réseau.</div>'; }
   loading=false;
 }
@@ -191,19 +219,21 @@ async function search(reset,autoplay){
 // ---- affichage ----
 function rowH(t){ const f=!!favs[t.id], d=!!lib[t.id], q=QUEUE.some(x=>x.id===t.id);
   return `<div class="row${cur&&cur.id===t.id?' play':''}" data-id="${t.id}"><div class="cov" style="background-image:url('${esc(t.img)}')"><button data-a="play">${cur&&cur.id===t.id&&!audio.paused?'❚❚':'▶'}</button></div>
-  <div class="meta"><b>${esc(t.name)}</b><span>${esc(t.artist)} · ${mmss(t.dur||0)}${vidOK(t.lic)?'<i class="lb">🎬 vidéos OK</i>':''}</span></div>
+  <div class="meta"><b>${esc(t.name)}</b><span><u class="ar" data-a="artist">${esc(t.artist)}</u> · ${mmss(t.dur||0)}${vidOK(t.lic)?'<i class="lb">🎬 vidéos OK</i>':''}${OFF.has(String(t.id))?'<i class="off">📴 hors ligne</i>':''}</span></div>
   <div class="act"><button class="ic fav" data-a="fav">${f?'♥':'♡'}</button>${t.ok?`<button class="ic${d?' ok':''}" data-a="dl">${d?'✓':q?'…':'↓'}</button>`:''}</div></div>`; }
 function render(more){
   counts(); const L=$('#list');
   if(!KEY){ L.innerHTML='<div class="empty"><div class="big">🔑</div>Il manque ta clé Jamendo gratuite.<br><br><button class="btn" style="max-width:260px" onclick="openSet()">AJOUTER MA CLÉ</button></div>'; return; }
-  let arr=tab==='find'?items:tab==='fav'?Object.values(favs).reverse():Object.values(lib).reverse();
-  if(!arr.length){ L.innerHTML=`<div class="empty"><div class="big">${tab==='fav'?'♡':tab==='lib'?'↓':'〰'}</div>${tab==='fav'?'Touche ♡ sur un morceau pour le garder ici.':tab==='lib'?'Les morceaux que tu télécharges apparaissent ici.':'Aucun résultat. Essaie un autre mot ou un autre style'+(vid?' (ou enlève le filtre 🎬 Pour vidéos)':'')+'.'}</div>`; return; }
-  L.innerHTML=arr.map(rowH).join('')+(tab==='find'&&more?'<button id="more">Voir plus</button>':'')+(tab==='find'?'<div class="lic">Musique libre de <a href="https://www.jamendo.com" target="_blank">Jamendo</a>, sous licences Creative Commons. Usage perso gratuit.<br>Serenity · une appli Clépo</div>':'');
+  if(tab==='pls'&&!openPl){ const ks=Object.keys(PLS); L.innerHTML=ks.length?ks.map(k=>`<div class="plr" data-pl="${esc(k)}"><div class="n">📁 ${esc(k)}</div><span>${PLS[k].length} morceau${PLS[k].length>1?'x':''}</span><button class="ic" data-del="${esc(k)}" style="width:34px;height:34px;font-size:13px">🗑</button></div>`).join(''):'<div class="empty"><div class="big">📁</div>Pas encore de liste.<br>Pendant l\'écoute, touche « ＋ Liste » dans le lecteur pour en créer une.</div>'; return; }
+  let arr=list();
+  if(!arr.length){ L.innerHTML=`<div class="empty"><div class="big">${tab==='fav'?'♡':tab==='lib'?'↓':'〰'}</div>${tab==='fav'?'Touche ♡ sur un morceau pour le garder ici.':tab==='lib'?'Les morceaux que tu télécharges ici sont gardés dans l\'appli : tu peux les réécouter sans réseau.':tab==='pls'?'Liste vide. Ajoute des morceaux avec « ＋ Liste ».':'Aucun résultat. Essaie un autre mot ou un autre style'+(vid?' (ou enlève le filtre 🎬 Pour vidéos)':'')+'.'}</div>`; return; }
+  L.innerHTML=arr.map(rowH).join('')+(tab==='find'&&more?'<button id="more">Voir plus</button>':'')+(tab==='find'?'<div class="lic">Musique libre de <a href="https://www.jamendo.com" target="_blank">Jamendo</a>, sous licences Creative Commons. Usage perso gratuit.<br><a href="#" onclick="document.getElementById(\'sInfo\').classList.add(\'on\');return false">ℹ️ Ce que j\'ai le droit de faire · Mentions légales</a><br>Serenity · une appli Clépo</div>':'');
   const m=$('#more'); if(m) m.onclick=()=>search(false);
 }
-const find=id=>items.find(t=>t.id==id)||favs[id]||lib[id];
+const find=id=>items.find(t=>t.id==id)||favs[id]||lib[id]||Object.values(PLS).flat().find(t=>t.id==id);
 $('#list').addEventListener('click',e=>{ const b=e.target.closest('[data-a]'); if(!b) return; const t=find(b.closest('.row').dataset.id); if(!t) return;
   if(b.dataset.a==='play') play(t);
+  else if(b.dataset.a==='artist') showArtist(t);
   else if(b.dataset.a==='fav'){ if(favs[t.id]) delete favs[t.id]; else { favs[t.id]=t; toast('♥ Ajouté aux favoris'); } LS.set('favs',favs); render(true); }
   else if(b.dataset.a==='dl') addQ(t); });
 
@@ -238,17 +268,17 @@ function credit(t){ const ok=vidOK(t.lic); $('#credit').classList.toggle('on',ok
 $('#crB').onclick=async()=>{ if(!cur) return; try{ await navigator.clipboard.writeText(creditTxt(cur)); toast('Crédit copié ✓ colle-le sous ta vidéo'); }catch(e){ toast('Copie impossible, recopie le texte'); } };
 // ---- minuteur de sommeil ----
 let TM=0, tmEnd=0, tmT=0; const TMS=[0,15,30,60];
-function tmUI(){ const b=$('#pTm'); if(!TM){ b.textContent='🌙'; b.classList.remove('on'); return; } const m=Math.max(0,Math.ceil((tmEnd-Date.now())/60000)); b.textContent='🌙 '+m+' min'; b.classList.add('on'); }
+function tmUI(){ const b=$('#pTm'); if(!TM){ b.textContent='🌙'; b.classList.remove('on'); return; } const m=Math.max(0,Math.ceil((tmEnd-Date.now())/60000)); b.textContent='🌙 '+m+'′'; b.classList.add('on'); }
 $('#pTm').onclick=()=>{ const i=(TMS.indexOf(TM)+1)%TMS.length; TM=TMS[i]; clearInterval(tmT); audio.volume=1;
   if(TM){ tmEnd=Date.now()+TM*60000; toast('🌙 La musique s\'arrêtera dans '+TM+' min');
     tmT=setInterval(()=>{ const left=tmEnd-Date.now(); if(left<=0){ audio.pause(); audio.volume=1; TM=0; clearInterval(tmT); toast('🌙 Bonne nuit'); } else if(left<20000) audio.volume=Math.max(0,left/20000); tmUI(); },1000); }
   else toast('Minuteur arrêté'); tmUI(); };
 // ---- lecteur ----
 function play(t){ if(cur&&cur.id===t.id){ audio.paused?audio.play():audio.pause(); return; }
-  cur=t; audio.src=(t.audio||'').replace(/format=mp3[12]/,'format='+SQ); if(EQ.p!=='Normal'||EQ.wide||EQ.comp||AC) chain(); if(AC&&AC.state!=='running') AC.resume(); audio.play().catch(()=>{}); $('#player').classList.add('on'); $('#pC').style.backgroundImage=`url('${t.img}')`; $('#pT').textContent=t.name; $('#pA').textContent=t.artist; $('#pDl').style.display=t.ok?'':'none'; credit(t);
+  cur=t; audio.src=(t.audio||'').replace(/format=mp3[12]/,'format='+SQ); offSrc(t); if(EQ.p!=='Normal'||EQ.wide||EQ.comp||AC) chain(); if(AC&&AC.state!=='running') AC.resume(); audio.play().catch(()=>{}); $('#player').classList.add('on'); $('#pC').style.backgroundImage=`url('${t.img}')`; $('#pT').textContent=t.name; $('#pA').textContent=t.artist; $('#pDl').style.display=t.ok?'':'none'; credit(t); history.replaceState(null,'',location.pathname+'?t='+t.id);
   if('mediaSession' in navigator){ navigator.mediaSession.metadata=new MediaMetadata({title:t.name,artist:t.artist,album:'Serenity',artwork:t.img?[{src:t.img,sizes:'200x200'}]:[]}); navigator.mediaSession.setActionHandler('nexttrack',()=>step(1)); navigator.mediaSession.setActionHandler('previoustrack',()=>step(-1)); }
   render(true); }
-function list(){ return tab==='find'?items:tab==='fav'?Object.values(favs).reverse():Object.values(lib).reverse(); }
+function list(){ return tab==='find'?items:tab==='fav'?Object.values(favs).reverse():tab==='pls'?(openPl&&PLS[openPl]||[]):Object.values(lib).reverse(); }
 function step(d){ const L=list(), i=L.findIndex(x=>cur&&x.id===cur.id); const n=L[i+d]; if(n) play(n); }
 audio.onended=()=>step(1);
 audio.onplay=audio.onpause=()=>{ $('#pp').textContent=audio.paused?'▶':'❚❚'; document.querySelectorAll('.row').forEach(r=>{ const b=r.querySelector('[data-a="play"]'); r.classList.toggle('play',cur&&r.dataset.id==cur.id); b.textContent=cur&&r.dataset.id==cur.id&&!audio.paused?'❚❚':'▶'; }); };
@@ -265,9 +295,45 @@ function addQ(t){ if(lib[t.id]){ toast('Déjà téléchargé ✓'); return; } if
 function fname(t){ return (t.artist+' - '+t.name).replace(/[\\/:*?"<>|]+/g,' ').trim().slice(0,90)+'.mp3'; }
 function dlUrl(t){ let u=t.dl||''; if(!u) u=`https://prod-1.storage.jamendo.com/download/track/${t.id}/${QUAL}/`; return u.replace(/\/mp3[12]\/?/,'/'+QUAL+'/'); }
 async function saveTrack(t){
-  // Jamendo envoie le MP3 « en pièce jointe » : le téléphone le prend dans son gestionnaire de téléchargement,
-  // la page ne bouge pas et le téléchargement continue même écran éteint.
+  // 1) on garde le MP3 dans l'appli (écoute sans réseau)  2) on le donne aussi au téléphone (dossier Téléchargements)
+  try{ const r=await fetch(dlUrl(t)); if(!r.ok) throw 0; const bl=await r.blob(); await idb('put',String(t.id),bl); OFF.add(String(t.id));
+    const o=URL.createObjectURL(bl); const a=document.createElement('a'); a.href=o; a.download=fname(t); document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(o),60000); return; }catch(e){}
   location.href=dlUrl(t); }
+// ---- stockage hors ligne (IndexedDB) ----
+let OFF=new Set();
+function idb(op,k,v){ return new Promise((res,rej)=>{ const q=indexedDB.open('serenity',1); q.onupgradeneeded=()=>q.result.createObjectStore('mp3'); q.onerror=()=>rej(q.error);
+  q.onsuccess=()=>{ const tx=q.result.transaction('mp3',op==='get'||op==='keys'?'readonly':'readwrite'), st=tx.objectStore('mp3');
+    const r=op==='put'?st.put(v,k):op==='get'?st.get(k):op==='del'?st.delete(k):st.getAllKeys(); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }; }); }
+idb('keys').then(ks=>{ OFF=new Set(ks.map(String)); render(true); }).catch(()=>{});
+let offURL=null;
+async function offSrc(t){ if(!OFF.has(String(t.id))) return; try{ const bl=await idb('get',String(t.id)); if(bl&&cur&&cur.id===t.id){ const pos=audio.currentTime; if(offURL) URL.revokeObjectURL(offURL); offURL=URL.createObjectURL(bl); audio.src=offURL; audio.currentTime=pos||0; audio.play().catch(()=>{}); } }catch(e){} }
+// ---- listes ----
+function savePls(){ LS.set('pls',PLS); counts(); }
+function plSheet(){ if(!cur) return; $('#plFor').textContent='« '+cur.name+' »'; const ks=Object.keys(PLS); $('#plL').innerHTML=ks.map(k=>`<button data-k="${esc(k)}">📁 ${esc(k)} · ${PLS[k].some(x=>x.id===cur.id)?'✓ déjà dedans':PLS[k].length}</button>`).join(''); $('#plNew').value=''; $('#sPl').classList.add('on'); }
+function addTo(k){ PLS[k]=PLS[k]||[]; if(!PLS[k].some(x=>x.id===cur.id)) PLS[k].push(cur); savePls(); $('#sPl').classList.remove('on'); toast('＋ Ajouté à « '+k+' »'); }
+$('#pAdd').onclick=plSheet; $('#plClose').onclick=()=>$('#sPl').classList.remove('on'); $('#sPl').onclick=e=>{ if(e.target.id==='sPl') $('#sPl').classList.remove('on'); };
+$('#plL').onclick=e=>{ const b=e.target.closest('[data-k]'); if(b) addTo(b.dataset.k); };
+$('#plMk').onclick=()=>{ const k=$('#plNew').value.trim(); if(!k){ toast('Donne un nom à ta liste'); return; } addTo(k); };
+$('#list').addEventListener('click',e=>{ const d=e.target.closest('[data-del]'); if(d){ e.stopPropagation(); if(confirm('Supprimer la liste « '+d.dataset.del+' » ?')){ delete PLS[d.dataset.del]; savePls(); render(); } return; }
+  const r=e.target.closest('[data-pl]'); if(r){ openPl=r.dataset.pl; ctx(); render(); } });
+// ---- barre de contexte (liste ouverte / artiste) ----
+function ctx(){ const c=$('#ctx'); let h='';
+  if(tab==='pls'&&openPl) h=`<b>📁 ${esc(openPl)}</b><button data-c="play">▶ Tout jouer</button><button data-c="x">✕</button>`;
+  else if(tab==='find'&&artist) h=`<b>🎤 ${esc(artist.name)}</b><button data-c="x">✕</button>`;
+  c.innerHTML=h; c.classList.toggle('on',!!h); }
+$('#ctx').onclick=e=>{ const b=e.target.closest('[data-c]'); if(!b) return;
+  if(b.dataset.c==='play'){ const L=list(); if(L[0]) play(L[0]); return; }
+  if(tab==='pls'){ openPl=null; ctx(); render(); } else { artist=null; if(!tag&&!mood&&!query) tag='Calme'; ui(); ctx(); search(true); } };
+// ---- artiste ----
+function showArtist(t){ if(!t||!t.aid){ toast('Artiste introuvable'); return; } artist={id:t.aid,name:t.artist}; mood=''; tag=''; query=''; $('#qIn').value=''; ui(); setTab('find'); ctx(); search(true); }
+$('#pAr').onclick=()=>cur&&showArtist(cur);
+// ---- partage ----
+$('#pSh').onclick=async()=>{ if(!cur) return; const url=location.origin+location.pathname+'?t='+cur.id, txt=`🎧 « ${cur.name} » de ${cur.artist}, à écouter gratuitement sur Serenity`;
+  try{ if(navigator.share){ await navigator.share({title:'Serenity',text:txt,url}); return; } }catch(e){ if(e&&e.name==='AbortError') return; }
+  try{ await navigator.clipboard.writeText(txt+' '+url); toast('Lien copié ✓'); }catch(e){ toast(url); } };
+// ---- infos ----
+$('#kInfo').onclick=()=>{ $('#sKey').classList.remove('on'); $('#sInfo').classList.add('on'); };
+$('#infoClose').onclick=()=>$('#sInfo').classList.remove('on'); $('#sInfo').onclick=e=>{ if(e.target.id==='sInfo') $('#sInfo').classList.remove('on'); };
 async function runQ(){ if(qRun) return; qRun=true;
   while(QUEUE.length){ const t=QUEUE[0]; $('#q').classList.add('on'); qTxt();
     await saveTrack(t);
@@ -284,7 +350,7 @@ $('#sKey').onclick=e=>{ if(e.target.id==='sKey') $('#sKey').classList.remove('on
 $('#kOk').onclick=()=>{ KEY=$('#kIn').value.trim(); LS.set('key',KEY); $('#sKey').classList.remove('on'); toast(KEY?'Clé enregistrée':'Clé effacée'); search(true); };
 document.querySelectorAll('[data-qual]').forEach(b=>b.onclick=()=>{ QUAL=b.dataset.qual; LS.set('qual',QUAL); openSet(); toast(QUAL==='mp32'?'MP3 haute qualité':'MP3 léger'); });
 
-search(true);
+{ const sp=new URLSearchParams(location.search).get('t'); if(sp&&/^\d+$/.test(sp)){ sharedId=sp; search(true,true).then(()=>{ sharedId=null; }); } else search(true); }
 if('serviceWorker' in navigator&&location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
