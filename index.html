@@ -155,7 +155,9 @@ const LS={get:(k,d)=>{try{const v=localStorage.getItem('ser-'+k);return v==null?
 const DEF_KEY='c35283ca';
 let KEY=LS.get('key',DEF_KEY), QUAL=LS.get('qual','mp32');
 const API='https://api.jamendo.com/v3.0/tracks/';
-const STYLES=[['🌙','Calme',['chillout','calm','relax']],['☕','Lo-fi',['lofi','chillout','instrumental']],['🎧','Électro',['electronic']],['🔥','Hip-hop',['hiphop','rap']],['🌊','Ambient',['ambient','chillout','relaxation']],['🎹','Piano',['piano','instrumental']],['🎸','Rock',['rock']],['🎷','Jazz',['jazz','lounge']],['💃','Dance',['dance','electronic']],['🌍','Monde',['world','travel']],['🎬','Film',['soundtrack','instrumental']],['🧘','Méditation',['relaxation','meditation','relax']]];
+const STYLES=[['🔊','Techno',['techno',{fuzzytags:'techno+electronic'},'minimal',{fuzzytags:'electronic',speed:'high+veryhigh',vocalinstrumental:'instrumental'}]],['🏠','House',['house','deephouse']],['🌃','Deep house',['deephouse','house']],['🥁','Drum & Bass',['drumnbass','dnb',{search:'drum and bass'}]],['🎧','Électro',['electronic','electro']],['🌀','Trance',['trance','progressive']],['💣','Dubstep',['dubstep',{search:'dubstep'}]],
+['🇫🇷','Rap français',[{fuzzytags:'hiphop',lang:'fr'},{tags:'rap',lang:'fr'},{fuzzytags:'rap',lang:'fr'},{search:'rap français'}]],['🇺🇸','Rap US',[{fuzzytags:'hiphop',lang:'en'},{tags:'rap',lang:'en'},{fuzzytags:'rap+hiphop'},{tags:'hiphop'}]],['🔥','Hip-hop',['hiphop','rap']],['💎','Trap',['trap',{search:'trap'}]],['💜','R&B',['rnb','soul']],
+['🥖','Chanson française',[{fuzzytags:'pop',lang:'fr'},{tags:'chanson'},{lang:'fr',vocalinstrumental:'vocal'}]],['🎤','Pop',['pop']],['☕','Lo-fi',['lofi','chillout']],['🌙','Calme',['chillout','calm','relax']],['🌴','Reggae',['reggae',{search:'reggae'}]],['🌍','Afro',['afrobeat','afro','world']],['🎸','Rock',['rock']],['🤘','Metal',['metal']],['🎷','Jazz',['jazz','lounge']],['🎹','Piano',['piano','instrumental']],['💃','Dance',['dance','electronic']],['🌊','Ambient',['ambient','chillout']],['🎬','Film',['soundtrack','instrumental']],['🧘','Méditation',['relaxation','meditation','relax']]];
 // playlists toutes prêtes : plusieurs essais, du plus précis au plus large
 const MOODS=[['😴','Dormir','Doux, sans paroles','linear-gradient(135deg,#1d2b6b,#5b4bb7)',[{tags:'sleep'},{tags:'relaxation'},{fuzzytags:'calm'},{fuzzytags:'relax'}]],
 ['💻','Travailler','Pour se concentrer','linear-gradient(135deg,#0f5e63,#2aa39a)',[{search:'lofi',vocalinstrumental:'instrumental'},{search:'study'},{tags:'instrumental',vocalinstrumental:'instrumental'}]],
@@ -163,7 +165,7 @@ const MOODS=[['😴','Dormir','Doux, sans paroles','linear-gradient(135deg,#1d2b
 ['🍹','Apéro','Lounge et funk','linear-gradient(135deg,#7a2b6b,#e0559b)',[{tags:'lounge'},{fuzzytags:'funk'},{fuzzytags:'jazz'}]],
 ['✈️','Voyage','Sur la route','linear-gradient(135deg,#1f5fa8,#4fc3f7)',[{tags:'travel'},{fuzzytags:'travel'},{fuzzytags:'world'}]],
 ['❤️','En amoureux','Tendre et romantique','linear-gradient(135deg,#8b1e3f,#ff6b8b)',[{fuzzytags:'romantic'},{fuzzytags:'love'},{tags:'romantic'}]]];
-let tab='find', tag='Calme', query='', mood='', vid=LS.get('vid',false), items=[], offset=0, loading=false, curVar=null;
+let tab='find', tag='Techno', query='', mood='', vid=LS.get('vid',false), items=[], offset=0, loading=false, curVar=null;
 let favs=LS.get('favs',{}), lib=LS.get('lib',{}), PLS=LS.get('pls',{}), artist=null, openPl=null, sharedId=null;
 let audio=new Audio(); audio.preload='none'; let cur=null, fixTried=0;
 function toast(t){ const e=$('#toast'); e.textContent=t; e.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>e.classList.remove('on'),2200); }
@@ -184,7 +186,7 @@ $('#chips').onclick=e=>{ const b=e.target.closest('.chip'); if(!b) return;
 $('#moods').onclick=e=>{ const b=e.target.closest('.mood'); if(!b) return; mood=b.dataset.mood; tag=''; query=''; artist=null; ctx(); $('#qIn').value=''; ui(); setTab('find'); search(true,true); };
 $('#qIn').addEventListener('keydown',e=>{ if(e.key==='Enter'){ query=e.target.value.trim(); if(query){ tag=''; mood=''; artist=null; ctx(); ui(); } e.target.blur(); setTab('find'); search(true); } });
 $('#qIn').addEventListener('input',e=>$('#qX').style.display=e.target.value?'block':'none');
-$('#qX').onclick=()=>{ $('#qIn').value=''; $('#qX').style.display='none'; query=''; if(!tag&&!mood){ tag='Calme'; } ui(); search(true); };
+$('#qX').onclick=()=>{ $('#qIn').value=''; $('#qX').style.display='none'; query=''; if(!tag&&!mood){ tag='Techno'; } ui(); search(true); };
 
 // ---- onglets ----
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.t));
@@ -198,7 +200,7 @@ function variants(){
   if(query) return [{search:query,order:'popularity_total'},{namesearch:query,order:'popularity_total'}];
   if(mood) return MOODS.find(m=>m[1]===mood)[4];
   const st=STYLES.find(x=>x[1]===tag); if(!st) return [{}];
-  const v=[]; st[2].forEach(t=>{ v.push({tags:t}); v.push({fuzzytags:t}); }); return v; }
+  const v=[]; st[2].forEach(t=>{ if(typeof t==='string'){ v.push({tags:t,order:'popularity_total'}); v.push({fuzzytags:t,order:'popularity_total'}); } else v.push({order:'popularity_total',...t}); }); if(!/Techno/.test(st[1])) v.push({search:st[1],order:'popularity_total'}); return v; }
 async function search(reset,autoplay){
   if(!KEY){ render(); return; }
   if(loading) return; loading=true; if(reset){ offset=0; items=[]; curVar=null; $('#list').innerHTML='<div class="empty"><div class="big">〰</div>Je cherche…</div>'; }
@@ -334,7 +336,7 @@ function ctx(){ const c=$('#ctx'); let h='';
   c.innerHTML=h; c.classList.toggle('on',!!h); }
 $('#ctx').onclick=e=>{ const b=e.target.closest('[data-c]'); if(!b) return;
   if(b.dataset.c==='play'){ const L=list(); if(L[0]) play(L[0]); return; }
-  if(tab==='pls'){ openPl=null; ctx(); render(); } else { artist=null; if(!tag&&!mood&&!query) tag='Calme'; ui(); ctx(); search(true); } };
+  if(tab==='pls'){ openPl=null; ctx(); render(); } else { artist=null; if(!tag&&!mood&&!query) tag='Techno'; ui(); ctx(); search(true); } };
 // ---- artiste ----
 function showArtist(t){ if(!t||!t.aid){ toast('Artiste introuvable'); return; } artist={id:t.aid,name:t.artist}; mood=''; tag=''; query=''; $('#qIn').value=''; ui(); setTab('find'); ctx(); search(true); }
 $('#pAr').onclick=()=>cur&&showArtist(cur);
