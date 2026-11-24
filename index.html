@@ -73,6 +73,13 @@ main{flex:1;overflow-y:auto;padding:4px 14px 170px}
 .btn.g{background:var(--card);color:var(--ink);border:1px solid var(--line)}
 .lic{font-size:11px;color:var(--mut);text-align:center;padding:10px 20px 0}
 .lic a{color:var(--acc)}
+.moods{display:flex;gap:10px;overflow-x:auto;padding:2px 20px 12px;scrollbar-width:none}.moods::-webkit-scrollbar{display:none}
+.mood{flex:none;width:128px;height:92px;border-radius:18px;padding:12px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;color:#fff;font-weight:700;font-size:14px;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
+.mood i{font-style:normal;font-size:26px}.mood small{font-weight:500;font-size:11px;opacity:.85}.mood.on{outline:2px solid #fff;outline-offset:-2px}
+.chip.vid{border-color:rgba(255,214,102,.5);color:#ffe7a3}.chip.vid.on{background:linear-gradient(135deg,#ffd666,#ff9a5a);color:#1a0d00}
+.lb{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:6px;margin-left:6px;vertical-align:1px;background:rgba(255,214,102,.18);color:#ffd666;border:1px solid rgba(255,214,102,.4)}
+#pTm{font-size:15px}#pTm.on{background:rgba(154,140,255,.25);border-color:#9a8cff;width:auto;padding:0 10px;border-radius:20px;font-size:12px;font-weight:700}
+#credit{margin-top:10px;display:none;gap:8px;align-items:center;font-size:12px;color:#ffe7a3}#credit.on{display:flex}#credit span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#credit button{padding:6px 12px;border-radius:999px;background:rgba(255,214,102,.18);border:1px solid rgba(255,214,102,.45);color:#ffe7a3;font-size:12px;font-weight:700}
 #toast{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top));transform:translate(-50%,-150%);padding:10px 18px;border-radius:999px;background:rgba(18,26,44,.9);border:1px solid var(--line);font-size:13px;transition:transform .35s;z-index:30;white-space:nowrap}
 #toast.on{transform:translate(-50%,0)}
 </style>
@@ -81,12 +88,13 @@ main{flex:1;overflow-y:auto;padding:4px 14px 170px}
 <div id="app">
   <header><div class="logo">Serenity<small>musique libre · par Clépo</small></div><button class="ic" id="bSet" aria-label="Réglages">⚙</button></header>
   <div class="search"><span>⌕</span><input id="qIn" placeholder="Artiste, titre, ambiance…" enterkeyhint="search" autocomplete="off"><button id="qX" style="display:none;color:var(--mut)">✕</button></div>
+  <div class="moods" id="moods"></div>
   <div class="chips" id="chips"></div>
   <div class="tabs"><button class="on" data-t="find">Découvrir</button><button data-t="fav">Favoris</button><button data-t="lib">Téléchargés</button></div>
   <main id="list"></main>
 </div>
 <div id="q"><div class="sp"></div><div class="t" id="qT"></div><button id="qStop" style="color:var(--mut);font-size:12px">ARRÊTER</button></div>
-<div id="player"><div class="pl"><div class="cov" id="pC"></div><div class="meta"><b id="pT"></b><span id="pA"></span></div><button class="ic" id="pDl">↓</button><button id="pp">❚❚</button></div><div id="bar"><i></i></div></div>
+<div id="player"><div class="pl"><div class="cov" id="pC"></div><div class="meta"><b id="pT"></b><span id="pA"></span></div><button class="ic" id="pTm" aria-label="Minuteur">🌙</button><button class="ic" id="pDl">↓</button><button id="pp">❚❚</button></div><div id="credit"><span id="crT"></span><button id="crB">Copier le crédit</button></div><div id="bar"><i></i></div></div>
 <div class="sheet" id="sKey"><div>
   <h3>RÉGLAGES</h3>
   <p>Serenity cherche dans la bibliothèque libre de <b>Jamendo</b> : des centaines de milliers de morceaux que les artistes permettent de télécharger gratuitement.</p>
@@ -105,21 +113,36 @@ const LS={get:(k,d)=>{try{const v=localStorage.getItem('ser-'+k);return v==null?
 const DEF_KEY='c35283ca';
 let KEY=LS.get('key',DEF_KEY), QUAL=LS.get('qual','mp32');
 const API='https://api.jamendo.com/v3.0/tracks/';
-const STYLES=[['🌙','Calme','chillout'],['☕','Lo-fi','lofi'],['🎧','Électro','electronic'],['🔥','Hip-hop','hiphop'],['🌊','Ambient','ambient'],['🎹','Piano','piano'],['🎸','Rock','rock'],['🎷','Jazz','jazz'],['💃','Dance','dance'],['🌍','Monde','world'],['🎬','Film','soundtrack'],['🧘','Méditation','relaxation']];
-let tab='find', tag='chillout', query='', items=[], offset=0, loading=false;
+const STYLES=[['🌙','Calme',['chillout','calm','relax']],['☕','Lo-fi',['lofi','chillout','instrumental']],['🎧','Électro',['electronic']],['🔥','Hip-hop',['hiphop','rap']],['🌊','Ambient',['ambient','chillout','relaxation']],['🎹','Piano',['piano','instrumental']],['🎸','Rock',['rock']],['🎷','Jazz',['jazz','lounge']],['💃','Dance',['dance','electronic']],['🌍','Monde',['world','travel']],['🎬','Film',['soundtrack','instrumental']],['🧘','Méditation',['relaxation','meditation','relax']]];
+// playlists toutes prêtes : plusieurs essais, du plus précis au plus large
+const MOODS=[['😴','Dormir','Doux, sans paroles','linear-gradient(135deg,#1d2b6b,#5b4bb7)',[{tags:'sleep'},{tags:'relaxation'},{fuzzytags:'calm'},{fuzzytags:'relax'}]],
+['💻','Travailler','Pour se concentrer','linear-gradient(135deg,#0f5e63,#2aa39a)',[{search:'lofi',vocalinstrumental:'instrumental'},{search:'study'},{tags:'instrumental',vocalinstrumental:'instrumental'}]],
+['🏃','Sport','Rythme qui pousse','linear-gradient(135deg,#a3341f,#ff7a3d)',[{fuzzytags:'energetic'},{tags:'sport'},{fuzzytags:'electronic+dance'}]],
+['🍹','Apéro','Lounge et funk','linear-gradient(135deg,#7a2b6b,#e0559b)',[{tags:'lounge'},{fuzzytags:'funk'},{fuzzytags:'jazz'}]],
+['✈️','Voyage','Sur la route','linear-gradient(135deg,#1f5fa8,#4fc3f7)',[{tags:'travel'},{fuzzytags:'travel'},{fuzzytags:'world'}]],
+['❤️','En amoureux','Tendre et romantique','linear-gradient(135deg,#8b1e3f,#ff6b8b)',[{fuzzytags:'romantic'},{fuzzytags:'love'},{tags:'romantic'}]]];
+let tab='find', tag='Calme', query='', mood='', vid=LS.get('vid',false), items=[], offset=0, loading=false, curVar=null;
 let favs=LS.get('favs',{}), lib=LS.get('lib',{});
 const audio=new Audio(); audio.preload='none'; let cur=null;
 function toast(t){ const e=$('#toast'); e.textContent=t; e.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>e.classList.remove('on'),2200); }
 const mmss=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
 const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const pick=t=>({id:t.id,name:t.name,artist:t.artist_name,img:t.album_image||t.image||'',dur:t.duration,audio:t.audio,dl:t.audiodownload,ok:t.audiodownload_allowed!==false,lic:t.license_ccurl||'',url:t.shareurl||t.shorturl||''});
+const vidOK=u=>!!u&&!/-nc|-nd/.test(u);
+const licName=u=>{const m=(u||'').match(/licenses\/([a-z-]+)\/([\d.]+)/);return m?'CC '+m[1].toUpperCase()+' '+m[2]:'Creative Commons'};
+const dec=x=>{const d=document.createElement('textarea');d.innerHTML=x||'';return d.value};
+const pick=t=>({id:t.id,name:dec(t.name),artist:dec(t.artist_name),img:t.album_image||t.image||'',dur:t.duration,audio:t.audio,dl:t.audiodownload,ok:t.audiodownload_allowed!==false,lic:t.license_ccurl||'',url:t.shareurl||t.shorturl||''});
 
 // ---- styles ----
-$('#chips').innerHTML=STYLES.map(s=>`<button class="chip${s[2]===tag?' on':''}" data-tag="${s[2]}">${s[0]} ${s[1]}</button>`).join('');
-$('#chips').onclick=e=>{ const b=e.target.closest('.chip'); if(!b) return; tag=b.dataset.tag===tag?'':b.dataset.tag; query=''; $('#qIn').value=''; $('#qX').style.display='none'; document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.tag===tag)); setTab('find'); search(true); };
-$('#qIn').addEventListener('keydown',e=>{ if(e.key==='Enter'){ query=e.target.value.trim(); if(query){ tag=''; document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on')); } e.target.blur(); setTab('find'); search(true); } });
+function ui(){ $('#chips').innerHTML=`<button class="chip vid${vid?' on':''}" data-vid="1">🎬 Pour vidéos</button>`+STYLES.map(s=>`<button class="chip${s[1]===tag&&!mood?' on':''}" data-tag="${s[1]}">${s[0]} ${s[1]}</button>`).join('');
+  $('#moods').innerHTML=MOODS.map(m=>`<button class="mood${m[1]===mood?' on':''}" data-mood="${m[1]}" style="background:${m[3]}"><i>${m[0]}</i><span>${m[1]}<br><small>${m[2]}</small></span></button>`).join(''); }
+ui();
+$('#chips').onclick=e=>{ const b=e.target.closest('.chip'); if(!b) return;
+  if(b.dataset.vid){ vid=!vid; LS.set('vid',vid); ui(); toast(vid?'🎬 Seulement les morceaux utilisables dans tes vidéos':'Tous les morceaux'); setTab('find'); search(true); return; }
+  tag=b.dataset.tag===tag&&!mood?'':b.dataset.tag; mood=''; query=''; $('#qIn').value=''; $('#qX').style.display='none'; ui(); setTab('find'); search(true); };
+$('#moods').onclick=e=>{ const b=e.target.closest('.mood'); if(!b) return; mood=b.dataset.mood; tag=''; query=''; $('#qIn').value=''; ui(); setTab('find'); search(true,true); };
+$('#qIn').addEventListener('keydown',e=>{ if(e.key==='Enter'){ query=e.target.value.trim(); if(query){ tag=''; mood=''; ui(); } e.target.blur(); setTab('find'); search(true); } });
 $('#qIn').addEventListener('input',e=>$('#qX').style.display=e.target.value?'block':'none');
-$('#qX').onclick=()=>{ $('#qIn').value=''; $('#qX').style.display='none'; query=''; if(!tag){ tag='chillout'; document.querySelector('[data-tag="chillout"]').classList.add('on'); } search(true); };
+$('#qX').onclick=()=>{ $('#qIn').value=''; $('#qX').style.display='none'; query=''; if(!tag&&!mood){ tag='Calme'; } ui(); search(true); };
 
 // ---- onglets ----
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.t));
@@ -127,14 +150,25 @@ function setTab(t){ tab=t; document.querySelectorAll('.tabs button').forEach(b=>
 function counts(){ const f=Object.keys(favs).length, l=Object.keys(lib).length; document.querySelector('[data-t="fav"]').innerHTML='Favoris'+(f?`<b>${f}</b>`:''); document.querySelector('[data-t="lib"]').innerHTML='Téléchargés'+(l?`<b>${l}</b>`:''); }
 
 // ---- recherche Jamendo ----
-async function search(reset){
+function variants(){
+  if(query) return [{search:query,order:'popularity_total'},{namesearch:query,order:'popularity_total'}];
+  if(mood) return MOODS.find(m=>m[1]===mood)[4];
+  const st=STYLES.find(x=>x[1]===tag); if(!st) return [{}];
+  const v=[]; st[2].forEach(t=>{ v.push({tags:t}); v.push({fuzzytags:t}); }); return v; }
+async function search(reset,autoplay){
   if(!KEY){ render(); return; }
-  if(loading) return; loading=true; if(reset){ offset=0; items=[]; $('#list').innerHTML='<div class="empty"><div class="big">〰</div>Je cherche…</div>'; }
-  const p=new URLSearchParams({client_id:KEY,format:'json',limit:30,offset,include:'musicinfo licenses',audioformat:'mp32',audiodlformat:QUAL,order:query?'popularity_total':'popularity_month',imagesize:200});
-  if(query) p.set('search',query); else if(tag) p.set('fuzzytags',tag);
-  try{ const r=await fetch(API+'?'+p); const j=await r.json();
-    if(j.headers&&j.headers.status!=='success'){ $('#list').innerHTML=`<div class="empty"><div class="big">🔑</div>${j.headers.code===5?'La clé Jamendo n\'est pas bonne. Vérifie-la dans ⚙.':'Jamendo ne répond pas pour l\'instant : '+esc(j.headers.error_message)}</div>`; loading=false; return; }
-    const got=(j.results||[]).map(pick); items=items.concat(got); offset+=got.length; render(got.length===30);
+  if(loading) return; loading=true; if(reset){ offset=0; items=[]; curVar=null; $('#list').innerHTML='<div class="empty"><div class="big">〰</div>Je cherche…</div>'; }
+  const base={client_id:KEY,format:'json',limit:30,include:'musicinfo licenses',audioformat:'mp32',audiodlformat:QUAL,order:'popularity_month',imagesize:200};
+  if(vid){ base.ccnc=0; base.ccnd=0; }
+  const list=curVar?[curVar]:variants(); let got=null;
+  try{
+    for(const v of list){ const p=new URLSearchParams({...base,...v,offset}); const r=await fetch(API+'?'+p); const j=await r.json();
+      if(j.headers&&j.headers.status!=='success'){ $('#list').innerHTML=`<div class="empty"><div class="big">🔑</div>${j.headers.code===5?'La clé Jamendo n\'est pas bonne. Vérifie-la dans ⚙.':'Jamendo ne répond pas pour l\'instant : '+esc(j.headers.error_message)}</div>`; loading=false; return; }
+      let res=(j.results||[]).map(pick); if(vid) res=res.filter(t=>vidOK(t.lic));
+      if(res.length||curVar){ got=res; curVar=v; break; } }
+    got=got||[]; const seen=new Set(items.map(x=>x.id)); got=got.filter(t=>!seen.has(t.id));
+    items=items.concat(got); offset+=30; render(got.length>0);
+    if(autoplay&&items[0]){ play(items[0]); toast('▶ Playlist '+mood); }
   }catch(e){ $('#list').innerHTML='<div class="empty"><div class="big">📡</div>Pas de connexion. Réessaie quand tu as du réseau.</div>'; }
   loading=false;
 }
@@ -142,13 +176,13 @@ async function search(reset){
 // ---- affichage ----
 function rowH(t){ const f=!!favs[t.id], d=!!lib[t.id], q=QUEUE.some(x=>x.id===t.id);
   return `<div class="row${cur&&cur.id===t.id?' play':''}" data-id="${t.id}"><div class="cov" style="background-image:url('${esc(t.img)}')"><button data-a="play">${cur&&cur.id===t.id&&!audio.paused?'❚❚':'▶'}</button></div>
-  <div class="meta"><b>${esc(t.name)}</b><span>${esc(t.artist)} · ${mmss(t.dur||0)}</span></div>
+  <div class="meta"><b>${esc(t.name)}</b><span>${esc(t.artist)} · ${mmss(t.dur||0)}${vidOK(t.lic)?'<i class="lb">🎬 vidéos OK</i>':''}</span></div>
   <div class="act"><button class="ic fav" data-a="fav">${f?'♥':'♡'}</button>${t.ok?`<button class="ic${d?' ok':''}" data-a="dl">${d?'✓':q?'…':'↓'}</button>`:''}</div></div>`; }
 function render(more){
   counts(); const L=$('#list');
   if(!KEY){ L.innerHTML='<div class="empty"><div class="big">🔑</div>Il manque ta clé Jamendo gratuite.<br><br><button class="btn" style="max-width:260px" onclick="openSet()">AJOUTER MA CLÉ</button></div>'; return; }
   let arr=tab==='find'?items:tab==='fav'?Object.values(favs).reverse():Object.values(lib).reverse();
-  if(!arr.length){ L.innerHTML=`<div class="empty"><div class="big">${tab==='fav'?'♡':tab==='lib'?'↓':'〰'}</div>${tab==='fav'?'Touche ♡ sur un morceau pour le garder ici.':tab==='lib'?'Les morceaux que tu télécharges apparaissent ici.':'Aucun résultat. Essaie un autre mot ou un autre style.'}</div>`; return; }
+  if(!arr.length){ L.innerHTML=`<div class="empty"><div class="big">${tab==='fav'?'♡':tab==='lib'?'↓':'〰'}</div>${tab==='fav'?'Touche ♡ sur un morceau pour le garder ici.':tab==='lib'?'Les morceaux que tu télécharges apparaissent ici.':'Aucun résultat. Essaie un autre mot ou un autre style'+(vid?' (ou enlève le filtre 🎬 Pour vidéos)':'')+'.'}</div>`; return; }
   L.innerHTML=arr.map(rowH).join('')+(tab==='find'&&more?'<button id="more">Voir plus</button>':'')+(tab==='find'?'<div class="lic">Musique libre de <a href="https://www.jamendo.com" target="_blank">Jamendo</a>, sous licences Creative Commons. Usage perso gratuit.<br>Serenity · une appli Clépo</div>':'');
   const m=$('#more'); if(m) m.onclick=()=>search(false);
 }
@@ -158,9 +192,20 @@ $('#list').addEventListener('click',e=>{ const b=e.target.closest('[data-a]'); i
   else if(b.dataset.a==='fav'){ if(favs[t.id]) delete favs[t.id]; else { favs[t.id]=t; toast('♥ Ajouté aux favoris'); } LS.set('favs',favs); render(true); }
   else if(b.dataset.a==='dl') addQ(t); });
 
+// ---- crédit pour les vidéos ----
+function creditTxt(t){ return `Musique : « ${t.name} » de ${t.artist} (${licName(t.lic)}) via Jamendo`; }
+function credit(t){ const ok=vidOK(t.lic); $('#credit').classList.toggle('on',ok); if(ok) $('#crT').textContent='🎬 À citer : '+creditTxt(t); }
+$('#crB').onclick=async()=>{ if(!cur) return; try{ await navigator.clipboard.writeText(creditTxt(cur)); toast('Crédit copié ✓ colle-le sous ta vidéo'); }catch(e){ toast('Copie impossible, recopie le texte'); } };
+// ---- minuteur de sommeil ----
+let TM=0, tmEnd=0, tmT=0; const TMS=[0,15,30,60];
+function tmUI(){ const b=$('#pTm'); if(!TM){ b.textContent='🌙'; b.classList.remove('on'); return; } const m=Math.max(0,Math.ceil((tmEnd-Date.now())/60000)); b.textContent='🌙 '+m+' min'; b.classList.add('on'); }
+$('#pTm').onclick=()=>{ const i=(TMS.indexOf(TM)+1)%TMS.length; TM=TMS[i]; clearInterval(tmT); audio.volume=1;
+  if(TM){ tmEnd=Date.now()+TM*60000; toast('🌙 La musique s\'arrêtera dans '+TM+' min');
+    tmT=setInterval(()=>{ const left=tmEnd-Date.now(); if(left<=0){ audio.pause(); audio.volume=1; TM=0; clearInterval(tmT); toast('🌙 Bonne nuit'); } else if(left<20000) audio.volume=Math.max(0,left/20000); tmUI(); },1000); }
+  else toast('Minuteur arrêté'); tmUI(); };
 // ---- lecteur ----
 function play(t){ if(cur&&cur.id===t.id){ audio.paused?audio.play():audio.pause(); return; }
-  cur=t; audio.src=t.audio; audio.play().catch(()=>{}); $('#player').classList.add('on'); $('#pC').style.backgroundImage=`url('${t.img}')`; $('#pT').textContent=t.name; $('#pA').textContent=t.artist; $('#pDl').style.display=t.ok?'':'none';
+  cur=t; audio.src=t.audio; audio.play().catch(()=>{}); $('#player').classList.add('on'); $('#pC').style.backgroundImage=`url('${t.img}')`; $('#pT').textContent=t.name; $('#pA').textContent=t.artist; $('#pDl').style.display=t.ok?'':'none'; credit(t);
   if('mediaSession' in navigator){ navigator.mediaSession.metadata=new MediaMetadata({title:t.name,artist:t.artist,album:'Serenity',artwork:t.img?[{src:t.img,sizes:'200x200'}]:[]}); navigator.mediaSession.setActionHandler('nexttrack',()=>step(1)); navigator.mediaSession.setActionHandler('previoustrack',()=>step(-1)); }
   render(true); }
 function list(){ return tab==='find'?items:tab==='fav'?Object.values(favs).reverse():Object.values(lib).reverse(); }
