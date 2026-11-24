@@ -80,13 +80,17 @@ main{flex:1;overflow-y:auto;padding:4px 14px 170px}
 .lb{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:6px;margin-left:6px;vertical-align:1px;background:rgba(255,214,102,.18);color:#ffd666;border:1px solid rgba(255,214,102,.4)}
 #pTm{font-size:15px}#pTm.on{background:rgba(154,140,255,.25);border-color:#9a8cff;width:auto;padding:0 10px;border-radius:20px;font-size:12px;font-weight:700}
 #credit{margin-top:10px;display:none;gap:8px;align-items:center;font-size:12px;color:#ffe7a3}#credit.on{display:flex}#credit span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#credit button{padding:6px 12px;border-radius:999px;background:rgba(255,214,102,.18);border:1px solid rgba(255,214,102,.45);color:#ffe7a3;font-size:12px;font-weight:700}
+.eqp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.eqp button{padding:12px 6px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:12.5px;line-height:1.25}.eqp button i{display:block;font-style:normal;font-size:22px;margin-bottom:4px}.eqp button.on{background:linear-gradient(135deg,rgba(127,216,198,.35),rgba(154,140,255,.35));border-color:var(--acc)}
+.eqb{display:flex;justify-content:space-between;gap:6px;padding:6px 4px}.eqb label{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--mut)}
+.eqb input{writing-mode:vertical-lr;direction:rtl;height:120px;width:28px;accent-color:#7fd8c6}
+.eqt{display:flex;gap:8px;margin-top:10px}.eqt button{flex:1;padding:12px 6px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:13px}.eqt button.on{border-color:var(--acc);background:rgba(127,216,198,.18)}
 #toast{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top));transform:translate(-50%,-150%);padding:10px 18px;border-radius:999px;background:rgba(18,26,44,.9);border:1px solid var(--line);font-size:13px;transition:transform .35s;z-index:30;white-space:nowrap}
 #toast.on{transform:translate(-50%,0)}
 </style>
 </head>
 <body>
 <div id="app">
-  <header><div class="logo">Serenity<small>musique libre · par Clépo</small></div><button class="ic" id="bSet" aria-label="Réglages">⚙</button></header>
+  <header><div class="logo">Serenity<small>musique libre · par Clépo</small></div><div style="display:flex;gap:8px"><button class="ic" id="bEq" aria-label="Son">🎚</button><button class="ic" id="bSet" aria-label="Réglages">⚙</button></div></header>
   <div class="search"><span>⌕</span><input id="qIn" placeholder="Artiste, titre, ambiance…" enterkeyhint="search" autocomplete="off"><button id="qX" style="display:none;color:var(--mut)">✕</button></div>
   <div class="moods" id="moods"></div>
   <div class="chips" id="chips"></div>
@@ -106,6 +110,17 @@ main{flex:1;overflow-y:auto;padding:4px 14px 170px}
   <div style="display:flex;gap:8px"><button class="btn g" data-qual="mp32" style="margin:0">MP3 haute qualité</button><button class="btn g" data-qual="mp31" style="margin:0">MP3 léger</button></div>
   <button class="btn g" id="kClose">FERMER</button>
 </div></div>
+<div class="sheet" id="sEq"><div>
+  <h3>RÉGLAGES DU SON</h3>
+  <p>Choisis ce que tu utilises pour écouter :</p>
+  <div class="eqp" id="eqP"></div>
+  <p style="margin-top:14px">Réglage fin :</p>
+  <div class="eqb" id="eqB"></div>
+  <div class="eqt"><button data-x="wide">🎧 Son spatial (casque)</button><button data-x="comp">🔊 Volume égal</button></div>
+  <p style="margin-top:14px">Qualité d'écoute :</p>
+  <div style="display:flex;gap:8px"><button class="btn g" data-sq="mp32" style="margin:0">Haute qualité</button><button class="btn g" data-sq="mp31" style="margin:0">Économie de données</button></div>
+  <button class="btn g" id="eqClose">FERMER</button>
+</div></div>
 <div id="toast"></div>
 <script>
 const $=s=>document.querySelector(s);
@@ -123,7 +138,7 @@ const MOODS=[['😴','Dormir','Doux, sans paroles','linear-gradient(135deg,#1d2b
 ['❤️','En amoureux','Tendre et romantique','linear-gradient(135deg,#8b1e3f,#ff6b8b)',[{fuzzytags:'romantic'},{fuzzytags:'love'},{tags:'romantic'}]]];
 let tab='find', tag='Calme', query='', mood='', vid=LS.get('vid',false), items=[], offset=0, loading=false, curVar=null;
 let favs=LS.get('favs',{}), lib=LS.get('lib',{});
-const audio=new Audio(); audio.preload='none'; let cur=null;
+const audio=new Audio(); audio.preload='none'; audio.crossOrigin='anonymous'; let cur=null;
 function toast(t){ const e=$('#toast'); e.textContent=t; e.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>e.classList.remove('on'),2200); }
 const mmss=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
 const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -192,6 +207,31 @@ $('#list').addEventListener('click',e=>{ const b=e.target.closest('[data-a]'); i
   else if(b.dataset.a==='fav'){ if(favs[t.id]) delete favs[t.id]; else { favs[t.id]=t; toast('♥ Ajouté aux favoris'); } LS.set('favs',favs); render(true); }
   else if(b.dataset.a==='dl') addQ(t); });
 
+// ---- réglages du son (égaliseur) ----
+const BANDS=[[60,'Basses'],[230,'Bas-méd.'],[910,'Médium'],[3600,'Aigus'],[12000,'Brillance']];
+const PRESETS=[['🎵','Normal',[0,0,0,0,0]],['🎧','Casque',[3,1,0,1,2]],['🔊','Haut-parleur du téléphone',[-4,2,3,2,1]],['💥','Basses +',[7,3,0,0,1]],['🗣️','Voix claires',[-2,-1,3,4,2]],['🌙','Nuit (doux)',[1,0,-1,-3,-5]],['🚗','Voiture',[4,1,0,2,3]],['🔈','Enceinte Bluetooth',[2,0,1,2,2]],['✨','Cristal',[0,-1,0,3,5]]];
+let EQ=LS.get('eq',{p:'Normal',g:[0,0,0,0,0],wide:false,comp:false}); let AC=null, F=[], WN=null, CMP=null;
+function chain(){ if(AC) return; try{ AC=new (window.AudioContext||window.webkitAudioContext)(); const src=AC.createMediaElementSource(audio);
+  F=BANDS.map(([f],i)=>{ const n=AC.createBiquadFilter(); n.type=i==0?'lowshelf':i==4?'highshelf':'peaking'; n.frequency.value=f; n.Q.value=1; return n; });
+  CMP=AC.createDynamicsCompressor(); CMP.threshold.value=-24; CMP.ratio.value=3.5; CMP.knee.value=20;
+  // son spatial : élargit la stéréo (mid/side)
+  const sp=AC.createChannelSplitter(2), mg=AC.createChannelMerger(2), L=AC.createGain(), Rr=AC.createGain(), xL=AC.createGain(), xR=AC.createGain(); WN={xL,xR,L,R:Rr};
+  let n=src; F.forEach(f=>{ n.connect(f); n=f; }); n.connect(sp);
+  sp.connect(L,0); sp.connect(Rr,1); sp.connect(xL,1); sp.connect(xR,0); L.connect(mg,0,0); xL.connect(mg,0,0); Rr.connect(mg,0,1); xR.connect(mg,0,1);
+  window._eqOut=mg; route(); apply(); }catch(e){ AC=null; } }
+function route(){ if(!AC) return; try{ window._eqOut.disconnect(); CMP.disconnect(); }catch(e){} if(EQ.comp){ window._eqOut.connect(CMP); CMP.connect(AC.destination); } else window._eqOut.connect(AC.destination); }
+function apply(){ if(!AC) return; F.forEach((f,i)=>f.gain.setTargetAtTime(EQ.g[i],AC.currentTime,.05)); const w=EQ.wide?.35:0; WN.L.gain.value=WN.R.gain.value=1+w; WN.xL.gain.value=WN.xR.gain.value=-w; route(); }
+function eqUI(){ $('#eqP').innerHTML=PRESETS.map(p=>`<button data-p="${p[1]}" class="${EQ.p===p[1]?'on':''}"><i>${p[0]}</i>${p[1]}</button>`).join('');
+  $('#eqB').innerHTML=BANDS.map(([f,n],i)=>`<label><input type="range" min="-12" max="12" step="1" value="${EQ.g[i]}" data-b="${i}"><span>${n}</span><b style="color:var(--ink);font-size:11px">${EQ.g[i]>0?'+':''}${EQ.g[i]}</b></label>`).join('');
+  document.querySelectorAll('.eqt button').forEach(b=>b.classList.toggle('on',!!EQ[b.dataset.x]));
+  document.querySelectorAll('[data-sq]').forEach(b=>b.style.borderColor=b.dataset.sq===SQ?'var(--acc)':''); }
+let SQ=LS.get('sq','mp32');
+$('#bEq').onclick=()=>{ chain(); eqUI(); $('#sEq').classList.add('on'); };
+$('#eqClose').onclick=()=>$('#sEq').classList.remove('on'); $('#sEq').onclick=e=>{ if(e.target.id==='sEq') $('#sEq').classList.remove('on'); };
+$('#eqP').onclick=e=>{ const b=e.target.closest('[data-p]'); if(!b) return; const p=PRESETS.find(x=>x[1]===b.dataset.p); EQ.p=p[1]; EQ.g=[...p[2]]; if(p[1]==='Casque') EQ.wide=true; LS.set('eq',EQ); chain(); apply(); eqUI(); toast(p[0]+' '+p[1]); };
+$('#eqB').oninput=e=>{ const i=+e.target.dataset.b; if(isNaN(i)) return; EQ.g[i]=+e.target.value; EQ.p='Perso'; LS.set('eq',EQ); chain(); apply(); e.target.nextElementSibling.nextElementSibling.textContent=(EQ.g[i]>0?'+':'')+EQ.g[i]; document.querySelectorAll('#eqP button').forEach(b=>b.classList.remove('on')); };
+document.querySelectorAll('.eqt button').forEach(b=>b.onclick=()=>{ EQ[b.dataset.x]=!EQ[b.dataset.x]; LS.set('eq',EQ); chain(); apply(); eqUI(); });
+document.querySelectorAll('[data-sq]').forEach(b=>b.onclick=()=>{ SQ=b.dataset.sq; LS.set('sq',SQ); eqUI(); toast(SQ==='mp32'?'Haute qualité':'Économie de données'); });
 // ---- crédit pour les vidéos ----
 function creditTxt(t){ return `Musique : « ${t.name} » de ${t.artist} (${licName(t.lic)}) via Jamendo`; }
 function credit(t){ const ok=vidOK(t.lic); $('#credit').classList.toggle('on',ok); if(ok) $('#crT').textContent='🎬 À citer : '+creditTxt(t); }
@@ -205,7 +245,7 @@ $('#pTm').onclick=()=>{ const i=(TMS.indexOf(TM)+1)%TMS.length; TM=TMS[i]; clear
   else toast('Minuteur arrêté'); tmUI(); };
 // ---- lecteur ----
 function play(t){ if(cur&&cur.id===t.id){ audio.paused?audio.play():audio.pause(); return; }
-  cur=t; audio.src=t.audio; audio.play().catch(()=>{}); $('#player').classList.add('on'); $('#pC').style.backgroundImage=`url('${t.img}')`; $('#pT').textContent=t.name; $('#pA').textContent=t.artist; $('#pDl').style.display=t.ok?'':'none'; credit(t);
+  cur=t; audio.src=(t.audio||'').replace(/format=mp3[12]/,'format='+SQ); if(EQ.p!=='Normal'||EQ.wide||EQ.comp||AC) chain(); if(AC&&AC.state!=='running') AC.resume(); audio.play().catch(()=>{}); $('#player').classList.add('on'); $('#pC').style.backgroundImage=`url('${t.img}')`; $('#pT').textContent=t.name; $('#pA').textContent=t.artist; $('#pDl').style.display=t.ok?'':'none'; credit(t);
   if('mediaSession' in navigator){ navigator.mediaSession.metadata=new MediaMetadata({title:t.name,artist:t.artist,album:'Serenity',artwork:t.img?[{src:t.img,sizes:'200x200'}]:[]}); navigator.mediaSession.setActionHandler('nexttrack',()=>step(1)); navigator.mediaSession.setActionHandler('previoustrack',()=>step(-1)); }
   render(true); }
 function list(){ return tab==='find'?items:tab==='fav'?Object.values(favs).reverse():Object.values(lib).reverse(); }
